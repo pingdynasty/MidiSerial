@@ -8,8 +8,10 @@
 #include <unistd.h>
 #include <iostream>
 
-#define DEFAULT_SPEED B38400
+// #define DEFAULT_SPEED B38400
+#define DEFAULT_SPEED 31250
 #define DEFAULT_PORT "/dev/ttyS1"
+#define BUFFER_LENGTH 2048
 
 class MidiSerial : public juce::MidiInputCallback {
 private:
@@ -44,7 +46,7 @@ public:
   void usage(){
     std::cerr << "MidiSerial v1"  << std::endl << "usage:" << std::endl
               << "-p FILE\t set serial port" << std::endl
-              << "-s NUM\t set serial speed (default: 38400)" << std::endl
+              << "-s NUM\t set serial speed (default: " << DEFAULT_SPEED << ")" << std::endl
               << "-v\t verbose, prints messages sent/received" << std::endl
               << "-i NUM\t set MIDI input device" << std::endl
               << "-o NUM\t set MIDI output device" << std::endl
@@ -103,8 +105,6 @@ public:
       midiin = MidiInput::createNewDevice(T("MidiSerial"), this);
     }
 
-    ssize_t len;
-    unsigned char buf[255];
     struct termios tio, oldtio;
 
     int oflag = O_RDWR | O_NOCTTY | O_NONBLOCK;
@@ -134,17 +134,45 @@ public:
     if(midiin != NULL)
       midiin->start();
 
+//     juce::MidiMessage msg;
+//     ssize_t len;
+//     int used;
+//     unsigned char buf[BUFFER_LENGTH];
+//     for(;;) {
+//       len = read(fd, &buf[0], BUFFER_LENGTH);
+//       if(len > 0){
+//         msg = juce::MidiMessage(&buf[0], len, used, msg.getRawData()[0]);
+//         if(midiout != NULL)
+//           midiout->sendMessageNow(msg);
+//         if(verbose)
+//           std::cout << "rx" << print(msg) << std::endl;
+//       }
+//     }
+
     juce::MidiMessage msg;
+    ssize_t len;
+    unsigned char buf[BUFFER_LENGTH];
     int used = 0;
+    int frompos = 0;
+    int topos = 0;
     for(;;) {
-      bzero(&buf[0], sizeof(buf));
-      len = read(fd, &buf[0], 255);
-      if(len > 0) {
-        msg = juce::MidiMessage(buf, len, used, msg.getRawData()[0]);
+      len = read(fd, &buf[topos], BUFFER_LENGTH-topos);
+      topos += len;
+      len = topos-frompos;
+      if(len > 0){
+        msg = juce::MidiMessage(&buf[frompos], len, used, msg.getRawData()[0]);
         if(midiout != NULL)
           midiout->sendMessageNow(msg);
         if(verbose)
           std::cout << "rx" << print(msg) << std::endl;
+        if(used == len)
+          frompos = topos = 0;
+        else
+          frompos += used;
+      }
+      if(topos >= BUFFER_LENGTH){
+        std::cerr << "buffer overflow!" << std::endl;
+        frompos = topos = 0;
       }
     }
         
