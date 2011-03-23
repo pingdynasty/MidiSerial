@@ -15,10 +15,14 @@
 
 class MidiSerial : public juce::MidiInputCallback {
 private:
-  int fd;
-  bool verbose;
-  MidiOutput* midiout;
-  MidiInput* midiin;
+  int m_fd;
+  struct termios m_oldtio;
+  juce::String m_port;
+  int m_speed;
+  bool m_verbose;
+  bool m_connected, m_running;
+  MidiOutput* m_midiout;
+  MidiInput* m_midiin;
 
   juce::String print(const MidiMessage& msg){
     juce::String str;
@@ -37,10 +41,10 @@ private:
 public:
   void handleIncomingMidiMessage(MidiInput *source,
                                  const MidiMessage &msg){
-    if(write(fd, msg.getRawData(), msg.getRawDataSize()) != msg.getRawDataSize())
-      perror("write failed");
-    if(verbose)
+    if(m_verbose)
       std::cout << "tx" << print(msg) << std::endl;
+    if(write(m_fd, msg.getRawData(), msg.getRawDataSize()) != msg.getRawDataSize())
+      perror("write failed");
   }
 
   void usage(){
@@ -55,17 +59,119 @@ public:
               << "-h or --help\tprint this usage information and exit" << std::endl;
   }
 
-  int run(int argc, char* argv[]) {
-    midiin = NULL;
-    midiout = NULL;
-    juce::String port = T(DEFAULT_PORT);
-    int speed = DEFAULT_SPEED;
+  int connect(){
+    if(m_midiin == NULL && m_midiout == NULL){
+      // default behaviour if no interface specified
+      m_midiout = MidiOutput::createNewDevice(T("MidiSerial"));
+      m_midiin = MidiInput::createNewDevice(T("MidiSerial"), this);
+    }
+    m_fd = openSerial(m_port.toUTF8(), m_speed);
+    if(m_fd < 0){
+      perror(m_port.toUTF8()); 
+      return -1; 
+    }
+    if(m_verbose)
+      std::cout << "tty " << m_port << " at " << m_speed << " baud" << std::endl;
+    //     fcntl(m_fd, F_SETFL, FNDELAY); // set non-blocking read
+    fcntl(m_fd, F_SETFL, 0); // set blocking read
+    //     fcntl(fd, F_SETFL, O_APPEND); // append output
+    //     fcntl(fd, F_NOCACHE, 1); // turn caching off
+    m_connected = true;
+    return 0;
+  }
+
+  int stop(){
+    if(m_verbose)
+      std::cout << "stopping" << std::endl;
+    m_running = false;
+    if(m_midiin != NULL)
+      m_midiin->stop();
+    return 0;
+  }
+
+  int start(){
+    if(m_midiin != NULL)
+      m_midiin->start();
+    m_running = true;
+    return 0;
+  }
+
+  int run(){
+    juce::MidiMessage msg;
+    ssize_t len;
+    unsigned char buf[BUFFER_LENGTH];
+    int used = 0;
+    int frompos = 0;
+    int topos = 0;
+    while(m_running) {
+      len = read(m_fd, &buf[topos], BUFFER_LENGTH-topos);
+      topos += len;
+      len = topos-frompos;
+      while(len > 0){ // shortest MIDI message is 1 byte long
+        msg = juce::MidiMessage(&buf[frompos], len, used, msg.getRawData()[0]);
+        if(m_midiout != NULL)
+          m_midiout->sendMessageNow(msg);
+        if(m_verbose)
+          std::cout << "rx" << print(msg) << std::endl;
+// 	std::cout << "rx:" << frompos << "-" << topos << " " << used << "/" << len << std::endl;
+        if(used == len)
+          frompos = topos = 0;
+        else
+          frompos += used;
+	len = topos-frompos;
+      }
+      if(topos >= BUFFER_LENGTH){
+        std::cerr << "buffer overflow!" << std::endl;
+        frompos = topos = 0;
+      }
+    }
+    return 0;
+  }
+
+  int openSerial(const char* serialport, int baud) {
+    struct termios toptions;
+    int fd;
+    fd = open(serialport, O_RDWR | O_NOCTTY | O_NDELAY);
+    if (fd == -1)  {
+      perror(serialport);
+      return -1;
+    }
+    if(tcgetattr(fd, &toptions) < 0) {
+      perror(serialport);
+      return -1;
+    }
+    m_oldtio = toptions;
+    cfsetispeed(&toptions, baud);
+    cfsetospeed(&toptions, baud);
+    //     cfmakeraw(&tio);
+    // 8N1
+    toptions.c_cflag &= ~PARENB;
+    toptions.c_cflag &= ~CSTOPB;
+    toptions.c_cflag &= ~CSIZE;
+    toptions.c_cflag |= CS8;
+    // no flow control
+    toptions.c_cflag &= ~CRTSCTS;
+    toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
+    toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
+    toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
+    toptions.c_oflag &= ~OPOST; // make raw
+    // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
+    toptions.c_cc[VMIN]  = 0;
+    toptions.c_cc[VTIME] = 20;
+    if(tcsetattr(fd, TCSANOW, &toptions) < 0) {
+      perror(serialport);
+      return -1;
+    }
+    return fd;
+  }
+
+  int configure(int argc, char* argv[]) {
     for(int i=1; i<argc; ++i){
       juce::String arg = juce::String(argv[i]);
       if(arg.compare("-p") == 0 && ++i < argc){
-        port = juce::String(argv[i]);
+        m_port = juce::String(argv[i]);
       }else if(arg.compare("-v") == 0){
-        verbose = true;
+        m_verbose = true;
       }else if(arg.compare("-l") == 0){
         std::cout << "MIDI output devices:" << std::endl;
         listDevices(MidiOutput::getDevices());
@@ -73,21 +179,21 @@ public:
         listDevices(MidiInput::getDevices());
         return 0;
       }else if(arg.compare("-s") == 0 && ++i < argc){
-        speed = juce::String(argv[i]).getIntValue();
-      }else if(arg.compare("-o") == 0 && ++i < argc && midiout == NULL){
+        m_speed = juce::String(argv[i]).getIntValue();
+      }else if(arg.compare("-o") == 0 && ++i < argc && m_midiout == NULL){
         int index = juce::String(argv[i]).getIntValue();
-        midiout = MidiOutput::openDevice(index);
-        if(verbose)
+        m_midiout = MidiOutput::openDevice(index);
+        if(m_verbose)
           std::cout << "Opening MIDI output: " << MidiOutput::getDevices()[index] << std::endl;
-      }else if(arg.compare("-i") == 0 && ++i < argc && midiin == NULL){
+      }else if(arg.compare("-i") == 0 && ++i < argc && m_midiin == NULL){
         int index = juce::String(argv[i]).getIntValue();
-        midiin = MidiInput::openDevice(index, this);
-        if(verbose)
+        m_midiin = MidiInput::openDevice(index, this);
+        if(m_verbose)
           std::cout << "Opening MIDI input: " << MidiInput::getDevices()[index] << std::endl;
-      }else if(arg.compare("-c") == 0 && ++i < argc && midiin == NULL && midiout == NULL){
+      }else if(arg.compare("-c") == 0 && ++i < argc && m_midiin == NULL && m_midiout == NULL){
         String name = juce::String(argv[i]);
-        midiout = MidiOutput::createNewDevice(name);
-        midiin = MidiInput::createNewDevice(name, this);
+        m_midiout = MidiOutput::createNewDevice(name);
+        m_midiin = MidiInput::createNewDevice(name, this);
       }else if(arg.compare("-h") == 0 || arg.compare("--help") == 0 ){
         usage();
         return 0;
@@ -98,103 +204,53 @@ public:
         return -1;
       }
     }
-
-    if(midiin == NULL && midiout == NULL){
-      // default behaviour if no interface specified
-      midiout = MidiOutput::createNewDevice(T("MidiSerial"));
-      midiin = MidiInput::createNewDevice(T("MidiSerial"), this);
-    }
-
-    struct termios tio, oldtio;
-
-    int oflag = O_RDWR | O_NOCTTY | O_NONBLOCK;
-
-    fd = open(port.toUTF8(), oflag);
-    if(fd <0){
-      perror(port.toUTF8()); 
-      return -1; 
-    }
-
-    tcgetattr(fd, &oldtio); /* save current port settings */
-
-    cfmakeraw(&tio);
-    if(cfsetispeed(&tio, speed) | cfsetospeed(&tio, speed)) // non-lazy logic
-      perror(juce::String(speed).toUTF8());
-    if(tcsetattr(fd, TCSANOW, &tio)){
-      perror(port.toUTF8());
-      //       return -1;
-    }
-
-    if(verbose)
-      std::cout << "tty " << port << " at " << cfgetispeed(&tio) << " baud" << std::endl;
-
-    //     fcntl(fd, F_SETFL, FNDELAY); // set non-blocking read
-    fcntl(fd, F_SETFL, 0); // set blocking read
-
-    if(midiin != NULL)
-      midiin->start();
-
-//     juce::MidiMessage msg;
-//     ssize_t len;
-//     int used;
-//     unsigned char buf[BUFFER_LENGTH];
-//     for(;;) {
-//       len = read(fd, &buf[0], BUFFER_LENGTH);
-//       if(len > 0){
-//         msg = juce::MidiMessage(&buf[0], len, used, msg.getRawData()[0]);
-//         if(midiout != NULL)
-//           midiout->sendMessageNow(msg);
-//         if(verbose)
-//           std::cout << "rx" << print(msg) << std::endl;
-//       }
-//     }
-
-    juce::MidiMessage msg;
-    ssize_t len;
-    unsigned char buf[BUFFER_LENGTH];
-    int used = 0;
-    int frompos = 0;
-    int topos = 0;
-    for(;;) {
-      len = read(fd, &buf[topos], BUFFER_LENGTH-topos);
-      topos += len;
-      len = topos-frompos;
-      if(len > 0){
-        msg = juce::MidiMessage(&buf[frompos], len, used, msg.getRawData()[0]);
-        if(midiout != NULL)
-          midiout->sendMessageNow(msg);
-        if(verbose)
-          std::cout << "rx" << print(msg) << std::endl;
-        if(used == len)
-          frompos = topos = 0;
-        else
-          frompos += used;
-      }
-      if(topos >= BUFFER_LENGTH){
-        std::cerr << "buffer overflow!" << std::endl;
-        frompos = topos = 0;
-      }
-    }
-        
-    tcsetattr(fd, TCSANOW, &oldtio);
-    close(fd);
-
     return 0;
   }
 
+  int disconnect(){
+    if(m_verbose)
+      std::cout << "disconnecting" << std::endl;
+    if(m_midiin != NULL)
+      delete m_midiin;
+    tcsetattr(m_fd, TCSANOW, &m_oldtio);
+    close(m_fd);
+    if(m_midiout != NULL)
+      delete m_midiout;
+    m_connected = false;
+    return 0;
+  }
+
+  MidiSerial() :
+    m_port(T(DEFAULT_PORT)),
+    m_speed(DEFAULT_SPEED)
+  {
+    m_midiin = NULL;
+    m_midiout = NULL;
+  }
+  
   ~MidiSerial(){
-    if(midiin != NULL){
-      midiin->stop();
-      delete midiin;
-    }
-    if(midiout != NULL)
-      delete midiout;
+    if(m_connected)
+      disconnect();
   }
 };
 
-int main (int argc, char* argv[]) {
+MidiSerial service;
+
+void sigfun(int sig){
+  service.stop();
+  (void)signal(SIGINT, SIG_DFL);
+}
+
+int main(int argc, char* argv[]) {
   const ScopedJuceInitialiser_NonGUI juceSystemInitialiser;
-  MidiSerial service;
-  int val = service.run(argc, argv);
-  return val;
+  (void)signal(SIGINT, sigfun);
+  int ret = service.configure(argc, argv);
+  if(!ret)
+    ret = service.connect();
+  if(!ret)
+    ret = service.start();
+  if(!ret)
+    ret = service.run();
+  ret = service.disconnect();
+  return ret;
 }
