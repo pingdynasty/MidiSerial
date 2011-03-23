@@ -177,7 +177,7 @@ public:
         listDevices(MidiOutput::getDevices());
         std::cout << "MIDI input devices:" << std::endl;
         listDevices(MidiInput::getDevices());
-        return 0;
+        return 1;
       }else if(arg.compare("-s") == 0 && ++i < argc){
         m_speed = juce::String(argv[i]).getIntValue();
       }else if(arg.compare("-o") == 0 && ++i < argc && m_midiout == NULL){
@@ -196,7 +196,7 @@ public:
         m_midiin = MidiInput::createNewDevice(name, this);
       }else if(arg.compare("-h") == 0 || arg.compare("--help") == 0 ){
         usage();
-        return 0;
+        return 1;
       }else{
         usage();
         errno = EINVAL;
@@ -208,22 +208,23 @@ public:
   }
 
   int disconnect(){
-    if(m_verbose)
-      std::cout << "disconnecting" << std::endl;
-    if(m_midiin != NULL)
-      delete m_midiin;
-    tcsetattr(m_fd, TCSANOW, &m_oldtio);
-    close(m_fd);
+    if(m_connected){
+      if(m_verbose)
+	std::cout << "disconnecting" << std::endl;
+      tcsetattr(m_fd, TCSANOW, &m_oldtio);
+      close(m_fd);
+      m_connected = false;
+    }
     if(m_midiout != NULL)
       delete m_midiout;
-    m_connected = false;
+    if(m_midiin != NULL)
+      delete m_midiin;
     return 0;
   }
 
   MidiSerial() :
     m_port(T(DEFAULT_PORT)),
-    m_speed(DEFAULT_SPEED)
-  {
+    m_speed(DEFAULT_SPEED){
     m_midiin = NULL;
     m_midiout = NULL;
   }
@@ -251,6 +252,6 @@ int main(int argc, char* argv[]) {
     ret = service.start();
   if(!ret)
     ret = service.run();
-  ret = service.disconnect();
+  ret |= service.disconnect();
   return ret;
 }
