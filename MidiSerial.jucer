@@ -22,10 +22,13 @@
             rtasFolder="c:\SDKs\PT_80_SDK" libraryType="1" juceFolder="../juce"/>
     <VS2010 targetFolder="Builds/VisualStudio2010" vstFolder="c:\SDKs\vstsdk2.4"
             rtasFolder="c:\SDKs\PT_80_SDK" libraryType="1" juceFolder="../juce"/>
+    <LINUX_MAKE targetFolder="Builds/Linux" vstFolder="~/SDKs/vstsdk2.4" juceFolder="../juce"/>
   </EXPORTFORMATS>
   <CONFIGURATIONS>
-    <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"/>
-    <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"/>
+    <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"
+                   osxSDK="default" osxCompatibility="default"/>
+    <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"
+                   osxSDK="default" osxCompatibility="default"/>
   </CONFIGURATIONS>
   <MAINGROUP id="bvR52B" name="MidiSerial">
     <GROUP id="iTaNvY" name="Source">
