@@ -7,6 +7,9 @@
 #include <strings.h>
 #include <unistd.h>
 #include <iostream>
+#include <sys/ioctl.h>
+
+#define IOSSIOSPEED _IOW('T', 2, speed_t)
 
 // #define DEFAULT_SPEED B38400
 #define DEFAULT_SPEED 31250
@@ -62,8 +65,8 @@ public:
   int connect(){
     if(m_midiin == NULL && m_midiout == NULL){
       // default behaviour if no interface specified
-      m_midiout = MidiOutput::createNewDevice(T("MidiSerial"));
-      m_midiin = MidiInput::createNewDevice(T("MidiSerial"), this);
+      m_midiout = MidiOutput::createNewDevice("MidiSerial");
+      m_midiin = MidiInput::createNewDevice("MidiSerial", this);
     }
     m_fd = openSerial(m_port.toUTF8(), m_speed);
     if(m_fd < 0){
@@ -158,6 +161,8 @@ public:
     // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
     toptions.c_cc[VMIN]  = 0;
     toptions.c_cc[VTIME] = 20;
+    if(ioctl(fd, IOSSIOSPEED, &baud ) == -1 )
+      printf( "Error %d calling ioctl( ..., IOSSIOSPEED, ... )\n", errno );
     if(tcsetattr(fd, TCSANOW, &toptions) < 0) {
       perror(serialport);
       return -1;
@@ -223,13 +228,15 @@ public:
   }
 
   MidiSerial() :
-    m_port(T(DEFAULT_PORT)),
+    m_port(DEFAULT_PORT),
     m_speed(DEFAULT_SPEED){
     m_midiin = NULL;
     m_midiout = NULL;
   }
   
   ~MidiSerial(){
+    if(m_running)
+      stop();
     if(m_connected)
       disconnect();
   }
@@ -243,7 +250,7 @@ void sigfun(int sig){
 }
 
 int main(int argc, char* argv[]) {
-  const ScopedJuceInitialiser_NonGUI juceSystemInitialiser;
+//   const ScopedJuceInitialiser_NonGUI juceSystemInitialiser;
   (void)signal(SIGINT, sigfun);
   int ret = service.configure(argc, argv);
   if(!ret)
