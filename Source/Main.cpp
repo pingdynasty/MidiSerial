@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <sys/ioctl.h>
+#include <errno.h>
 
 #define IOSSIOSPEED _IOW('T', 2, speed_t)
 
