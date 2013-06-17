@@ -7,42 +7,67 @@
               pluginIsSynth="0" pluginWantsMidiIn="0" pluginProducesMidiOut="0"
               pluginSilenceInIsSilenceOut="0" pluginTailLength="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="JuceProjectAU" pluginAUViewClass="JuceProjectAU_V1"
-              pluginRTASCategory="" bundleIdentifier="com.yourcompany.MidiSerial"
-              jucerVersion="3.0.0">
+              pluginRTASCategory="" bundleIdentifier="com.pingdynasty.MidiSerial"
+              jucerVersion="3.1.0">
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" vstFolder="~/SDKs/vstsdk2.4" rtasFolder="~/SDKs/PT_80_SDK"
-               objCExtraSuffix="VUamjE" juceFolder="../juce"/>
-    <XCODE_IPHONE targetFolder="Builds/iOS" vstFolder="~/SDKs/vstsdk2.4" rtasFolder="~/SDKs/PT_80_SDK"
-                  objCExtraSuffix="c2dfYZ" juceFolder="../juce"/>
-    <MSVC6 targetFolder="Builds/MSVC6" vstFolder="c:\SDKs\vstsdk2.4" rtasFolder="c:\SDKs\PT_80_SDK"
-           libraryType="1" juceFolder="../juce"/>
+               objCExtraSuffix="VUamjE" juceFolder="modules" extraCompilerFlags="">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"
+                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"
+                       osxSDK="default" osxCompatibility="default" osxArchitecture="default"/>
+      </CONFIGURATIONS>
+    </XCODE_MAC>
     <VS2005 targetFolder="Builds/VisualStudio2005" vstFolder="c:\SDKs\vstsdk2.4"
-            rtasFolder="c:\SDKs\PT_80_SDK" libraryType="1" juceFolder="../juce"/>
+            rtasFolder="c:\SDKs\PT_80_SDK" libraryType="1" juceFolder="modules">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"
+                       winWarningLevel="4" generateManifest="1"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"
+                       winWarningLevel="4" generateManifest="1"/>
+      </CONFIGURATIONS>
+    </VS2005>
     <VS2008 targetFolder="Builds/VisualStudio2008" vstFolder="c:\SDKs\vstsdk2.4"
-            rtasFolder="c:\SDKs\PT_80_SDK" libraryType="1" juceFolder="../juce"/>
+            rtasFolder="c:\SDKs\PT_80_SDK" libraryType="1" juceFolder="modules">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"
+                       winWarningLevel="4" generateManifest="1"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"
+                       winWarningLevel="4" generateManifest="1"/>
+      </CONFIGURATIONS>
+    </VS2008>
     <VS2010 targetFolder="Builds/VisualStudio2010" vstFolder="c:\SDKs\vstsdk2.4"
-            rtasFolder="c:\SDKs\PT_80_SDK" libraryType="1" juceFolder="../juce"/>
-    <LINUX_MAKE targetFolder="Builds/Linux" vstFolder="~/SDKs/vstsdk2.4" juceFolder="../juce"/>
+            rtasFolder="c:\SDKs\PT_80_SDK" libraryType="1" juceFolder="modules">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"
+                       winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"
+                       winWarningLevel="4" generateManifest="1" winArchitecture="32-bit"/>
+      </CONFIGURATIONS>
+    </VS2010>
+    <LINUX_MAKE targetFolder="Builds/Linux" vstFolder="~/SDKs/vstsdk2.4" juceFolder="modules">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"
+                       libraryPath="/usr/X11R6/lib/"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"
+                       libraryPath="/usr/X11R6/lib/"/>
+      </CONFIGURATIONS>
+    </LINUX_MAKE>
   </EXPORTFORMATS>
-  <CONFIGURATIONS>
-    <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"
-                   osxSDK="default" osxCompatibility="default"/>
-    <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"
-                   osxSDK="default" osxCompatibility="default"/>
-  </CONFIGURATIONS>
   <MAINGROUP id="bvR52B" name="MidiSerial">
     <GROUP id="iTaNvY" name="Source">
       <FILE id="ZnUDP8" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
   </MAINGROUP>
-  <JUCEOPTIONS JUCE_FORCE_DEBUG="default" JUCE_LOG_ASSERTIONS="default" JUCE_ASIO="default"
-               JUCE_WASAPI="default" JUCE_DIRECTSOUND="default" JUCE_ALSA="default"
-               JUCE_QUICKTIME="default" JUCE_OPENGL="default" JUCE_DIRECT2D="default"
-               JUCE_USE_FLAC="default" JUCE_USE_OGGVORBIS="default" JUCE_USE_CDBURNER="default"
-               JUCE_USE_CDREADER="default" JUCE_USE_CAMERA="default" JUCE_ENABLE_REPAINT_DEBUGGING="default"
-               JUCE_USE_XINERAMA="default" JUCE_USE_XSHM="default" JUCE_USE_XRENDER="default"
-               JUCE_USE_XCURSOR="default" JUCE_PLUGINHOST_VST="default" JUCE_PLUGINHOST_AU="default"
-               JUCE_ONLY_BUILD_CORE_LIBRARY="default" JUCE_WEB_BROWSER="default"
-               JUCE_SUPPORT_CARBON="default" JUCE_CHECK_MEMORY_LEAKS="default"
-               JUCE_CATCH_UNHANDLED_EXCEPTIONS="default"/>
+  <JUCEOPTIONS/>
+  <MODULES>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_audio" showAllCode="1"/>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
+  </MODULES>
 </JUCERPROJECT>
