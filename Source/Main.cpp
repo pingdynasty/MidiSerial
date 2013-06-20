@@ -46,9 +46,9 @@ public:
   void handleIncomingMidiMessage(MidiInput *source,
                                  const MidiMessage &msg){
     if(m_verbose)
-      std::cout << "tx" << print(msg) << std::endl;
+      std::cout << "tx " << m_port << ": " << print(msg) << std::endl;
     if(write(m_fd, msg.getRawData(), msg.getRawDataSize()) != msg.getRawDataSize())
-      perror("write failed");
+      perror(m_port.toUTF8());
   }
 
   void usage(){
@@ -116,7 +116,7 @@ public:
         if(m_midiout != NULL)
           m_midiout->sendMessageNow(msg);
         if(m_verbose)
-          std::cout << "rx" << print(msg) << std::endl;
+          std::cout << "rx " << m_port << ": " << print(msg) << std::endl;
 // 	std::cout << "rx:" << frompos << "-" << topos << " " << used << "/" << len << std::endl;
         if(used == len)
           frompos = topos = 0;
@@ -162,8 +162,9 @@ public:
     // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
     toptions.c_cc[VMIN]  = 0;
     toptions.c_cc[VTIME] = 20;
-    if(ioctl(fd, IOSSIOSPEED, &baud ) == -1 )
-      printf( "Error %d calling ioctl( ..., IOSSIOSPEED, ... )\n", errno );
+    if(ioctl(fd, IOSSIOSPEED, &baud ) == -1){
+      perror(serialport);
+    }
     if(tcsetattr(fd, TCSANOW, &toptions) < 0) {
       perror(serialport);
       return -1;
@@ -198,6 +199,8 @@ public:
           std::cout << "Opening MIDI input: " << MidiInput::getDevices()[index] << std::endl;
       }else if(arg.compare("-c") == 0 && ++i < argc && m_midiin == NULL && m_midiout == NULL){
         String name = juce::String(argv[i]);
+        if(m_verbose)
+          std::cout << "Creating MIDI input and output: " << name << std::endl;
         m_midiout = MidiOutput::createNewDevice(name);
         m_midiin = MidiInput::createNewDevice(name, this);
       }else if(arg.compare("-h") == 0 || arg.compare("--help") == 0 ){
