@@ -45,10 +45,22 @@ private:
 public:
   void handleIncomingMidiMessage(MidiInput *source,
                                  const MidiMessage &msg){
+    if(msg.isSysEx()){
+      if(m_verbose)
+	std::cout << "tx " << m_port << ": " << " sysex " << msg.getSysExDataSize() << std::endl;
+      return;
+    }
     if(m_verbose)
       std::cout << "tx " << m_port << ": " << print(msg) << std::endl;
     if(write(m_fd, msg.getRawData(), msg.getRawDataSize()) != msg.getRawDataSize())
       perror(m_port.toUTF8());
+    /*
+virtual void MidiInputCallback::handlePartialSysexMessage	(	MidiInput * 	source,
+const uint8 * 	messageData,
+int 	numBytesSoFar,
+double 	timestamp 
+)		
+     */
   }
 
   void usage(){
