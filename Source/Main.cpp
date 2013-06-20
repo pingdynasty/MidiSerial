@@ -162,9 +162,9 @@ public:
     // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
     toptions.c_cc[VMIN]  = 0;
     toptions.c_cc[VTIME] = 20;
-    if(ioctl(fd, IOSSIOSPEED, &baud ) == -1){
-      perror(serialport);
-    }
+//     if(ioctl(fd, IOSSIOSPEED, &baud ) == -1){
+//       perror(serialport);
+//     }
     if(tcsetattr(fd, TCSANOW, &toptions) < 0) {
       perror(serialport);
       return -1;
