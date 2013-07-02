@@ -10,10 +10,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 
-#define IOSSIOSPEED _IOW('T', 2, speed_t)
-
-// #define DEFAULT_SPEED B38400
-#define DEFAULT_SPEED 31250
+#define DEFAULT_SPEED 115200
 #define DEFAULT_PORT "/dev/ttyS1"
 #define BUFFER_LENGTH 2048
 
@@ -89,7 +86,7 @@ double 	timestamp
     if(m_verbose)
       std::cout << "tty " << m_port << " at " << m_speed << " baud" << std::endl;
     //     fcntl(m_fd, F_SETFL, FNDELAY); // set non-blocking read
-    fcntl(m_fd, F_SETFL, 0); // set blocking read
+//     fcntl(m_fd, F_SETFL, 0); // set blocking read
     //     fcntl(fd, F_SETFL, O_APPEND); // append output
     //     fcntl(fd, F_NOCACHE, 1); // turn caching off
     m_connected = true;
@@ -145,42 +142,37 @@ double 	timestamp
   }
 
   int openSerial(const char* serialport, int baud) {
-    struct termios toptions;
+    struct termios tio;
     int fd;
     fd = open(serialport, O_RDWR | O_NOCTTY | O_NDELAY);
-    if (fd == -1)  {
+    if(fd == -1){
       perror(serialport);
       return -1;
     }
-    if(tcgetattr(fd, &toptions) < 0) {
+    if(tcgetattr(fd, &tio) < 0){
       perror(serialport);
       return -1;
     }
-    m_oldtio = toptions;
-    cfsetispeed(&toptions, baud);
-    cfsetospeed(&toptions, baud);
+    m_oldtio = tio;
+    fcntl(fd, F_SETFL, 0);
+
+    /* Configure port */
+    tio.c_cflag = B115200 | CS8 | CLOCAL | CREAD;
+    tio.c_iflag = IGNPAR;
+    tio.c_oflag = 0;
+    tio.c_lflag = 0;
+    tio.c_cc[VMIN] = 1;
+    tio.c_cc[VTIME] = 0;
+    cfsetispeed(&tio, baud);
+    cfsetospeed(&tio, baud);
     //     cfmakeraw(&tio);
-    // 8N1
-    toptions.c_cflag &= ~PARENB;
-    toptions.c_cflag &= ~CSTOPB;
-    toptions.c_cflag &= ~CSIZE;
-    toptions.c_cflag |= CS8;
-    // no flow control
-    toptions.c_cflag &= ~CRTSCTS;
-    toptions.c_cflag |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
-    toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
-    toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
-    toptions.c_oflag &= ~OPOST; // make raw
-    // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
-    toptions.c_cc[VMIN]  = 0;
-    toptions.c_cc[VTIME] = 20;
-//     if(ioctl(fd, IOSSIOSPEED, &baud ) == -1){
-//       perror(serialport);
-//     }
-    if(tcsetattr(fd, TCSANOW, &toptions) < 0) {
+	
+    tcflush(fd, TCIFLUSH);
+    if(tcsetattr(fd, TCSANOW, &tio) < 0){
       perror(serialport);
       return -1;
     }
+
     return fd;
   }
 
