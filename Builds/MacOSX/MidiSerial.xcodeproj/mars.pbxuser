@@ -1,5 +1,32 @@
 // !$*UTF8*$!
 {
+	21E5194FBC800C00686CD67C /* Main.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1011, 3588}}";
+			sepNavSelRange = "{8109, 0}";
+			sepNavVisRange = "{3919, 838}";
+		};
+	};
+	411EB67D178301D00067BEA3 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 21E5194FBC800C00686CD67C /* Main.cpp */;
+		name = "Main.cpp: 273";
+		rLen = 0;
+		rLoc = 8109;
+		rType = 0;
+		vrLen = 838;
+		vrLoc = 3919;
+	};
+	417BF4A51779FEBA0066F801 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 21E5194FBC800C00686CD67C /* Main.cpp */;
+		name = "Main.cpp: 301";
+		rLen = 0;
+		rLoc = 8109;
+		rType = 0;
+		vrLen = 954;
+		vrLoc = 3922;
+	};
 	41D66B7B176F5F1200D1D425 /* MidiSerial */ = {
 		isa = PBXExecutable;
 		activeArgIndices = (
@@ -72,8 +99,12 @@
 					PBXFileDataSource_Target_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 393177276;
-			PBXWorkspaceStateSaveDate = 393177276;
+			PBXPerProjectTemplateStateSaveDate = 394459524;
+			PBXWorkspaceStateSaveDate = 394459524;
+		};
+		perUserProjectItems = {
+			411EB67D178301D00067BEA3 /* PBXTextBookmark */ = 411EB67D178301D00067BEA3 /* PBXTextBookmark */;
+			417BF4A51779FEBA0066F801 /* PBXTextBookmark */ = 417BF4A51779FEBA0066F801 /* PBXTextBookmark */;
 		};
 		sourceControlManager = 41D66B84176F5F2000D1D425 /* Source Control */;
 		userBuildSettings = {
