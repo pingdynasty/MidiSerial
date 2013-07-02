@@ -43,21 +43,22 @@ public:
   void handleIncomingMidiMessage(MidiInput *source,
                                  const MidiMessage &msg){
     if(msg.isSysEx()){
+      handlePartialSysexMessage(source, msg.getRawData(), msg.getRawDataSize(), msg.getTimeStamp());
+    }else{
       if(m_verbose)
-	std::cout << "tx " << m_port << ": " << " sysex " << msg.getSysExDataSize() << std::endl;
-      return;
+	std::cout << "tx " << m_port << ": " << print(msg) << std::endl;
+      if(write(m_fd, msg.getRawData(), msg.getRawDataSize()) != msg.getRawDataSize())
+	perror(m_port.toUTF8());    
     }
+  }
+
+  void handlePartialSysexMessage(MidiInput* source, const uint8* data,
+				 int size, double timestamp){
     if(m_verbose)
-      std::cout << "tx " << m_port << ": " << print(msg) << std::endl;
-    if(write(m_fd, msg.getRawData(), msg.getRawDataSize()) != msg.getRawDataSize())
-      perror(m_port.toUTF8());
-    /*
-virtual void MidiInputCallback::handlePartialSysexMessage	(	MidiInput * 	source,
-const uint8 * 	messageData,
-int 	numBytesSoFar,
-double 	timestamp 
-)		
-     */
+      std::cout << "tx " << m_port << ": " << " sysex " << size << " bytes" << std::endl;
+    ssize_t len = write(m_fd, data, size);
+    if(len != size)
+      perror(m_port.toUTF8());    
   }
 
   void usage(){
