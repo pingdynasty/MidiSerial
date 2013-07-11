@@ -10,13 +10,24 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 
-#define DEFAULT_SPEED 115200
-#define DEFAULT_PORT "/dev/ttyS1"
-#define BUFFER_LENGTH 2048
+#define DEFAULT_SPEED              115200
+#define DEFAULT_PORT               "/dev/ttyS1"
+#define DEFAULT_BUFFER_SIZE        4096
+
+class MidiReader {
+private:
+public:
+  int readMidiMessage(juce::MidiMessage& msg, unsigned char lastbyte, unsigned char* buf, ssize_t len){
+    int used;
+    msg = juce::MidiMessage(buf, len, used, lastbyte);
+    return used;
+  }
+};
 
 class MidiSerial : public juce::MidiInputCallback {
 private:
   int m_fd;
+  int bufferSize;
   struct termios m_oldtio;
   juce::String m_port;
   int m_speed;
@@ -24,12 +35,22 @@ private:
   bool m_connected, m_running;
   MidiOutput* m_midiout;
   MidiInput* m_midiin;
+  MidiReader midireader;
 
   juce::String print(const MidiMessage& msg){
     juce::String str;
     for(int i=0; i<msg.getRawDataSize(); ++i){
       str += " 0x";
       str += juce::String::toHexString(msg.getRawData()[i]);
+    }
+    return str;
+  }
+
+  juce::String print(const unsigned char* buf, int len){
+    juce::String str;
+    for(int i=0; i<len; ++i){
+      str += " 0x";
+      str += juce::String::toHexString(buf[i]);
     }
     return str;
   }
@@ -112,31 +133,23 @@ public:
 
   int run(){
     juce::MidiMessage msg;
+    unsigned char buf[bufferSize];
+    unsigned char lastbyte;
     ssize_t len;
-    unsigned char buf[BUFFER_LENGTH];
     int used = 0;
-    int frompos = 0;
-    int topos = 0;
+    int frompos;
     while(m_running) {
-      len = read(m_fd, &buf[topos], BUFFER_LENGTH-topos);
-      topos += len;
-      len = topos-frompos;
-      while(len > 0){ // shortest MIDI message is 1 byte long
-        msg = juce::MidiMessage(&buf[frompos], len, used, msg.getRawData()[0]);
-        if(m_midiout != NULL)
-          m_midiout->sendMessageNow(msg);
-        if(m_verbose)
-          std::cout << "rx " << m_port << ": " << print(msg) << std::endl;
-// 	std::cout << "rx:" << frompos << "-" << topos << " " << used << "/" << len << std::endl;
-        if(used == len)
-          frompos = topos = 0;
-        else
-          frompos += used;
-	len = topos-frompos;
-      }
-      if(topos >= BUFFER_LENGTH){
-        std::cerr << "buffer overflow!" << std::endl;
-        frompos = topos = 0;
+      frompos = 0;
+      len = read(m_fd, buf, bufferSize);
+      while(len > 0){
+	used = midireader.readMidiMessage(msg, lastbyte, &buf[frompos], len);
+	if(used == 0){
+	  std::cerr << "failed to read message " << print(&buf[frompos], len) << std::endl;
+	  break;
+	}
+	lastbyte = buf[frompos+len];
+	frompos += used;
+	len -= used;
       }
     }
     return 0;
@@ -238,7 +251,7 @@ public:
 
   MidiSerial() :
     m_port(DEFAULT_PORT),
-    m_speed(DEFAULT_SPEED){
+    m_speed(DEFAULT_SPEED), bufferSize(DEFAULT_BUFFER_SIZE) {
     m_midiin = NULL;
     m_midiout = NULL;
   }
