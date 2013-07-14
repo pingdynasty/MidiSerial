@@ -49,9 +49,9 @@
     <LINUX_MAKE targetFolder="Builds/Linux" vstFolder="~/SDKs/vstsdk2.4" juceFolder="modules">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="MidiSerial"
-                       libraryPath="/usr/X11R6/lib/"/>
+                       libraryPath=""/>
         <CONFIGURATION name="Release" isDebug="0" optimisation="2" targetName="MidiSerial"
-                       libraryPath="/usr/X11R6/lib/"/>
+                       libraryPath=""/>
       </CONFIGURATIONS>
     </LINUX_MAKE>
   </EXPORTFORMATS>

@@ -2,30 +2,57 @@
 {
 	21E5194FBC800C00686CD67C /* Main.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1011, 3588}}";
-			sepNavSelRange = "{8109, 0}";
-			sepNavVisRange = "{3919, 838}";
+			sepNavIntBoundsRect = "{{0, 0}, {1219, 3913}}";
+			sepNavSelRange = "{8894, 0}";
+			sepNavVisRange = "{6951, 1333}";
 		};
 	};
-	411EB67D178301D00067BEA3 /* PBXTextBookmark */ = {
+	417678BB1792E0F5009D0ED9 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 21E5194FBC800C00686CD67C /* Main.cpp */;
-		name = "Main.cpp: 273";
+		name = "Main.cpp: 294";
 		rLen = 0;
-		rLoc = 8109;
+		rLoc = 8743;
 		rType = 0;
-		vrLen = 838;
-		vrLoc = 3919;
+		vrLen = 1327;
+		vrLoc = 2175;
 	};
-	417BF4A51779FEBA0066F801 /* PBXTextBookmark */ = {
+	417678BC1792E0F5009D0ED9 /* XCBuildMessageTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 21E5194FBC800C00686CD67C /* Main.cpp */;
-		name = "Main.cpp: 301";
+		comments = "Duplicate case value";
+		fRef = 417678BD1792E0F5009D0ED9 /* MidiReader.h */;
+		fallbackIsa = XCBuildMessageTextBookmark;
+		rLen = 1;
+		rLoc = 88;
+		rType = 1;
+	};
+	417678BD1792E0F5009D0ED9 /* MidiReader.h */ = {
+		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
+		name = MidiReader.h;
+		path = /Users/mars/devel/MidiSerial/Builds/MacOSX/../../Source/MidiReader.h;
+		sourceTree = "<absolute>";
+	};
+	417678BE1792E0F5009D0ED9 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 417678BF1792E0F5009D0ED9 /* MidiReader.h */;
+		name = "MidiReader.h: 283";
 		rLen = 0;
-		rLoc = 8109;
+		rLoc = 6923;
 		rType = 0;
-		vrLen = 954;
-		vrLoc = 3922;
+		vrLen = 732;
+		vrLoc = 2078;
+	};
+	417678BF1792E0F5009D0ED9 /* MidiReader.h */ = {
+		isa = PBXFileReference;
+		name = MidiReader.h;
+		path = /Users/mars/devel/MidiSerial/Builds/MacOSX/../../Source/MidiReader.h;
+		sourceTree = "<absolute>";
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1011, 3861}}";
+			sepNavSelRange = "{6923, 0}";
+			sepNavVisRange = "{1977, 714}";
+		};
 	};
 	41D66B7B176F5F1200D1D425 /* MidiSerial */ = {
 		isa = PBXExecutable;
@@ -99,12 +126,13 @@
 					PBXFileDataSource_Target_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 394459524;
-			PBXWorkspaceStateSaveDate = 394459524;
+			PBXPerProjectTemplateStateSaveDate = 395420885;
+			PBXWorkspaceStateSaveDate = 395420885;
 		};
 		perUserProjectItems = {
-			411EB67D178301D00067BEA3 /* PBXTextBookmark */ = 411EB67D178301D00067BEA3 /* PBXTextBookmark */;
-			417BF4A51779FEBA0066F801 /* PBXTextBookmark */ = 417BF4A51779FEBA0066F801 /* PBXTextBookmark */;
+			417678BB1792E0F5009D0ED9 /* PBXTextBookmark */ = 417678BB1792E0F5009D0ED9 /* PBXTextBookmark */;
+			417678BC1792E0F5009D0ED9 /* XCBuildMessageTextBookmark */ = 417678BC1792E0F5009D0ED9 /* XCBuildMessageTextBookmark */;
+			417678BE1792E0F5009D0ED9 /* PBXTextBookmark */ = 417678BE1792E0F5009D0ED9 /* PBXTextBookmark */;
 		};
 		sourceControlManager = 41D66B84176F5F2000D1D425 /* Source Control */;
 		userBuildSettings = {
