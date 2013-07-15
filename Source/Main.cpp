@@ -15,6 +15,12 @@
 #define DEFAULT_PORT               "/dev/ttyS1"
 #define DEFAULT_BUFFER_SIZE        4096
 
+/**
+ * to test with virtual serial port / pty:
+ * MidiSerial -p /dev/ptyp0
+ * MidiSerial -p /dev/ttyp0
+ */
+
 // class MidiReader {
 // private:
 // public:
@@ -34,7 +40,6 @@
 class MidiSerial : public juce::MidiInputCallback {
 private:
   int m_fd;
-  int bufferSize;
   struct termios m_oldtio;
   juce::String m_port;
   int m_speed;
@@ -42,6 +47,7 @@ private:
   bool m_connected, m_running;
   MidiOutput* m_midiout;
   MidiInput* m_midiin;
+  int bufferSize;
   MidiReader midireader;
 
   juce::String print(const MidiMessage& msg){
@@ -162,6 +168,13 @@ public:
 	    m_midiout->sendMessageNow(msg);
 	  if(m_verbose)
 	    std::cout << "rx " << m_port << ": " << print(msg) << std::endl;
+	}else if(status == ERROR){
+	  if(m_verbose){
+	    int len;
+	    unsigned char* buf = midireader.getBuffer(len);
+	    std::cout << "rx error " << m_port << ": " << print(buf, len) << std::endl;
+	  }
+	  midireader.clear();
 	}
       }
     }

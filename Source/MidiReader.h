@@ -59,6 +59,7 @@ public:
   void clear(){
     runningStatus = buffer[0];
     pos = 0;
+    status = READY;
   }
 
   unsigned char* getBuffer(int& length){
@@ -73,7 +74,7 @@ public:
   MidiReaderStatus read(unsigned char data){
     if(status == READY){
       clear(); // discard previous message
-    }else if(pos > sizeof(buffer)){
+    }else if(pos > size){
       status = ERROR;
       // todo: throw exception
       return status;
@@ -84,7 +85,7 @@ public:
     case RESERVED_F4:
     case RESERVED_F9:
     case TUNE_REQUEST:
-    case SYSEX_EOX: // receiving SYSEX_EOX on it's own is really an error
+    case SYSEX_EOX: // receiving SYSEX_EOX on its own is really an error
     case TIMING_CLOCK:
     case START:
     case CONTINUE:
@@ -102,6 +103,8 @@ public:
       if(pos == 2){
 	status = READY;
 	msg = MidiMessage(buffer[0], buffer[1]);
+      }else{
+	status = INCOMPLETE;
       }
       break;
     case NOTE_OFF:
@@ -113,20 +116,26 @@ public:
       if(pos == 3){
 	status = READY;
 	msg = MidiMessage(buffer[0], buffer[1], buffer[2]);
+      }else{
+	status = INCOMPLETE;
       }
       break;
     case SYSEX:
-      if(data == SYSEX_EOX){
+      if(data == SYSEX_EOX && pos > 1){
 	status = READY;
-      }else if(data >= STATUS_BYTE){
+	msg = MidiMessage::createSysExMessage(buffer+1, pos-2);
+      }else if(data >= STATUS_BYTE && pos > 1){
+	// SysEx message terminated by a status byte different from 0xf7
 	runningStatus = data; // save status byte for next message
 	buffer[pos-1] = SYSEX_EOX;
 	status = READY;
-	msg = MidiMessage::createSysExMessage(buffer, pos);
+	msg = MidiMessage::createSysExMessage(buffer+1, pos-2);
+      }else{
+	status = INCOMPLETE;
       }
       break;
     default:
-      if(buffer[0] < STATUS_BYTE && runningStatus >= STATUS_BYTE){
+      if(pos == 1 && data < STATUS_BYTE && runningStatus >= STATUS_BYTE){
 	// MIDI running status: this message is missing the status byte, re-use previous status
 	buffer[pos++] = data;
 	buffer[0] = runningStatus;
