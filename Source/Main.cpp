@@ -9,10 +9,33 @@
 #include <iostream>
 #include <sys/ioctl.h>
 #include <errno.h>
+#include "MidiReader.h"
 
-#define DEFAULT_SPEED 115200
-#define DEFAULT_PORT "/dev/ttyS1"
-#define BUFFER_LENGTH 2048
+#define DEFAULT_SPEED              115200
+#define DEFAULT_PORT               "/dev/ttyS1"
+#define DEFAULT_BUFFER_SIZE        4096
+
+/**
+ * to test with virtual serial port / pty:
+ * MidiSerial -p /dev/ptyp0
+ * MidiSerial -p /dev/ttyp0
+ */
+
+// class MidiReader {
+// private:
+// public:
+//   int readMidiMessage(juce::MidiMessage& msg, unsigned char lastbyte, unsigned char* buf, ssize_t len){
+//     int used;
+//     if(buf[0] == 0xf7){
+//       // sysex
+//     }else{
+//       msg = juce::MidiMessage(buf, len, used, lastbyte);
+//     }
+//     return used;
+//   }
+//   int push(unsigned char data){
+//   }
+// };
 
 class MidiSerial : public juce::MidiInputCallback {
 private:
@@ -24,12 +47,23 @@ private:
   bool m_connected, m_running;
   MidiOutput* m_midiout;
   MidiInput* m_midiin;
+  int bufferSize;
+  MidiReader midireader;
 
   juce::String print(const MidiMessage& msg){
     juce::String str;
     for(int i=0; i<msg.getRawDataSize(); ++i){
       str += " 0x";
       str += juce::String::toHexString(msg.getRawData()[i]);
+    }
+    return str;
+  }
+
+  juce::String print(const unsigned char* buf, int len){
+    juce::String str;
+    for(int i=0; i<len; ++i){
+      str += " 0x";
+      str += juce::String::toHexString(buf[i]);
     }
     return str;
   }
@@ -42,14 +76,14 @@ private:
 public:
   void handleIncomingMidiMessage(MidiInput *source,
                                  const MidiMessage &msg){
-    if(msg.isSysEx()){
-      handlePartialSysexMessage(source, msg.getRawData(), msg.getRawDataSize(), msg.getTimeStamp());
-    }else{
+//     if(msg.isSysEx()){
+//       handlePartialSysexMessage(source, msg.getRawData(), msg.getRawDataSize(), msg.getTimeStamp());
+//     }else{
       if(m_verbose)
 	std::cout << "tx " << m_port << ": " << print(msg) << std::endl;
       if(write(m_fd, msg.getRawData(), msg.getRawDataSize()) != msg.getRawDataSize())
 	perror(m_port.toUTF8());    
-    }
+//     }
   }
 
   void handlePartialSysexMessage(MidiInput* source, const uint8* data,
@@ -112,31 +146,36 @@ public:
 
   int run(){
     juce::MidiMessage msg;
+    unsigned char buf[bufferSize];
     ssize_t len;
-    unsigned char buf[BUFFER_LENGTH];
-    int used = 0;
-    int frompos = 0;
-    int topos = 0;
+    int frompos;
+    MidiReaderStatus status;
     while(m_running) {
-      len = read(m_fd, &buf[topos], BUFFER_LENGTH-topos);
-      topos += len;
-      len = topos-frompos;
-      while(len > 0){ // shortest MIDI message is 1 byte long
-        msg = juce::MidiMessage(&buf[frompos], len, used, msg.getRawData()[0]);
-        if(m_midiout != NULL)
-          m_midiout->sendMessageNow(msg);
-        if(m_verbose)
-          std::cout << "rx " << m_port << ": " << print(msg) << std::endl;
-// 	std::cout << "rx:" << frompos << "-" << topos << " " << used << "/" << len << std::endl;
-        if(used == len)
-          frompos = topos = 0;
-        else
-          frompos += used;
-	len = topos-frompos;
-      }
-      if(topos >= BUFFER_LENGTH){
-        std::cerr << "buffer overflow!" << std::endl;
-        frompos = topos = 0;
+      frompos = 0;
+      len = read(m_fd, buf, bufferSize);
+	/* possibility that buffer contains:
+	   a) one incomplete message
+	   b) one complete message
+	   c) one complete message followed by one or more complete messages, 
+	      and/or possibly followed by an incomplete message
+	*/
+//       use: getc_unlocked() or getc() instead, or getw()?
+      while(frompos < len){
+	status = midireader.read(buf[frompos++]);
+	if(status == READY){
+	  msg = midireader.getMessage();
+	  if(m_midiout != NULL)
+	    m_midiout->sendMessageNow(msg);
+	  if(m_verbose)
+	    std::cout << "rx " << m_port << ": " << print(msg) << std::endl;
+	}else if(status == ERROR){
+	  if(m_verbose){
+	    int len;
+	    unsigned char* buf = midireader.getBuffer(len);
+	    std::cout << "rx error " << m_port << ": " << print(buf, len) << std::endl;
+	  }
+	  midireader.clear();
+	}
       }
     }
     return 0;
@@ -238,7 +277,9 @@ public:
 
   MidiSerial() :
     m_port(DEFAULT_PORT),
-    m_speed(DEFAULT_SPEED){
+    m_speed(DEFAULT_SPEED), 
+    bufferSize(DEFAULT_BUFFER_SIZE),
+    midireader(DEFAULT_BUFFER_SIZE) {
     m_midiin = NULL;
     m_midiout = NULL;
   }

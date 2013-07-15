@@ -312,7 +312,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>Main.cpp</string>
+								<string>MidiReader.h</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -320,14 +320,15 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>Main.cpp</string>
+										<string>MidiReader.h</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>411EB67D178301D00067BEA3</string>
+										<string>417678BE1792E0F5009D0ED9</string>
 										<key>history</key>
 										<array>
-											<string>417BF4A51779FEBA0066F801</string>
+											<string>417678BB1792E0F5009D0ED9</string>
+											<string>417678BC1792E0F5009D0ED9</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -339,14 +340,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {1072, 435}}</string>
+								<string>{{0, 0}, {1072, 407}}</string>
 								<key>RubberWindowFrame</key>
 								<string>160 59 1280 819 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>435pt</string>
+							<string>407pt</string>
 						</dict>
 						<dict>
 							<key>ContentConfiguration</key>
@@ -359,14 +360,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 440}, {1072, 338}}</string>
+								<string>{{0, 412}, {1072, 366}}</string>
 								<key>RubberWindowFrame</key>
 								<string>160 59 1280 819 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
 							<key>Proportion</key>
-							<string>338pt</string>
+							<string>366pt</string>
 						</dict>
 					</array>
 					<key>Proportion</key>
@@ -385,9 +386,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>411EB6771782F9870067BEA3</string>
+				<string>417678C01792E0F5009D0ED9</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>411EB6781782F9870067BEA3</string>
+				<string>417678C11792E0F5009D0ED9</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -525,8 +526,8 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>/Users/mars/devel/MidiSerial/Builds/MacOSX/MidiSerial.xcodeproj</string>
 		<string>41AA70F2131BE8A9006F5D73</string>
+		<string>/Users/mars/devel/MidiSerial/Builds/MacOSX/MidiSerial.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
 	<string>160 59 1280 819 0 0 1440 878 </string>
@@ -550,7 +551,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string></string>
+								<string>MidiReader.h</string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -608,7 +609,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>41AA70F2131BE8A9006F5D73</string>
-				<string>411EB6791782F9870067BEA3</string>
+				<string>417678BA1792E0F1009D0ED9</string>
 				<string>1CD0528F0623707200166675</string>
 				<string>XCMainBuildResultsModuleGUID</string>
 			</array>
@@ -621,7 +622,7 @@
 			<key>WindowToolGUID</key>
 			<string>41AA70F2131BE8A9006F5D73</string>
 			<key>WindowToolIsVisible</key>
-			<true/>
+			<false/>
 		</dict>
 		<dict>
 			<key>FirstTimeWindowDisplayed</key>
