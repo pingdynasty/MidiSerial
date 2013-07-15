@@ -126,10 +126,10 @@ public:
 	msg = MidiMessage::createSysExMessage(buffer+1, pos-2);
       }else if(data >= STATUS_BYTE && pos > 1){
 	// SysEx message terminated by a status byte different from 0xf7
-	runningStatus = data; // save status byte for next message
 	buffer[pos-1] = SYSEX_EOX;
 	status = READY;
 	msg = MidiMessage::createSysExMessage(buffer+1, pos-2);
+	buffer[0] = data; // save status byte for next message - will be saved as running status
       }else{
 	status = INCOMPLETE;
       }
