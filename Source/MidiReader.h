@@ -13,6 +13,7 @@ enum MidiStatus {
   PROGRAM_CHANGE		= 0xC0,
   CHANNEL_PRESSURE		= 0xD0,
   PITCH_BEND_CHANGE		= 0xE0,
+
   SYSTEM_COMMON			= 0xF0,
   SYSEX				= 0xF0,
   TIME_CODE_QUARTER_FRAME       = 0xF1,
@@ -80,23 +81,7 @@ public:
       return status;
     }
     buffer[pos++] = data;
-    switch(buffer[0]){
-    case TIME_CODE_QUARTER_FRAME:
-    case RESERVED_F4:
-    case RESERVED_F9:
-    case TUNE_REQUEST:
-    case SYSEX_EOX: // receiving SYSEX_EOX on its own is really an error
-    case TIMING_CLOCK:
-    case START:
-    case CONTINUE:
-    case STOP: 
-    case RESERVED_FD:
-    case ACTIVE_SENSING:
-    case SYSTEM_RESET:
-      // one byte messages
-      status = READY;
-      msg = MidiMessage(buffer[0]);
-      break;
+    switch(buffer[0] & MIDI_STATUS_MASK){
     case PROGRAM_CHANGE:
     case CHANNEL_PRESSURE:
       // two byte messages
@@ -120,18 +105,41 @@ public:
 	status = INCOMPLETE;
       }
       break;
-    case SYSEX:
-      if(data == SYSEX_EOX && pos > 1){
+    case SYSTEM_COMMON:
+      switch(buffer[0]){
+      case TIME_CODE_QUARTER_FRAME:
+      case RESERVED_F4:
+      case RESERVED_F9:
+      case TUNE_REQUEST:
+      case TIMING_CLOCK:
+      case START:
+      case CONTINUE:
+      case STOP:
+      case RESERVED_FD:
+      case ACTIVE_SENSING:
+      case SYSTEM_RESET:
+	// one byte messages
 	status = READY;
-	msg = MidiMessage::createSysExMessage(buffer+1, pos-2);
-      }else if(data >= STATUS_BYTE && pos > 1){
-	// SysEx message terminated by a status byte different from 0xf7
-	buffer[pos-1] = SYSEX_EOX;
-	status = READY;
-	msg = MidiMessage::createSysExMessage(buffer+1, pos-2);
-	buffer[0] = data; // save status byte for next message - will be saved as running status
-      }else{
-	status = INCOMPLETE;
+	msg = MidiMessage(buffer[0]);
+	break;
+      case SYSEX:
+	if(data == SYSEX_EOX && pos > 1){
+	  status = READY;
+	  msg = MidiMessage::createSysExMessage(buffer+1, pos-2);
+	}else if(data >= STATUS_BYTE && pos > 1){
+	  // SysEx message terminated by a status byte different from 0xf7
+	  buffer[pos-1] = SYSEX_EOX;
+	  status = READY;
+	  msg = MidiMessage::createSysExMessage(buffer+1, pos-2);
+	  buffer[0] = data; // save status byte for next message - will be saved as running status
+	}else{
+	  status = INCOMPLETE;
+	}
+	break;
+      case SYSEX_EOX: // receiving SYSEX_EOX on its own is really an error
+      default:
+	status = ERROR;
+	break;
       }
       break;
     default:
