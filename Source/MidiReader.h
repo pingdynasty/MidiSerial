@@ -80,7 +80,7 @@ public:
       return status;
     }
     buffer[pos++] = data;
-    switch(buffer[0]){
+    switch(buffer[0] & MIDI_STATUS_MASK){
     case TIME_CODE_QUARTER_FRAME:
     case RESERVED_F4:
     case RESERVED_F9:
